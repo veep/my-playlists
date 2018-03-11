@@ -59,12 +59,20 @@ var hbs = exphbs.create({
 var app = express();
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
+app.use(require('cookie-parser')(process.env.SECRET));
+var bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 db.serialize(function() {
   db.run("CREATE TABLE IF NOT EXISTS playlist (playlist_id, name, last_snapshot_id, owner_id, collaborative, public)");
   db.run("CREATE TABLE IF NOT EXISTS playlist_track (playlist_id, track_id, added_at)");
   db.run("CREATE TABLE IF NOT EXISTS track (track_id, name, artist, album, popularity)");
   db.run("CREATE TABLE IF NOT EXISTS user_track (user_id, track_id, score)");
+  db.run("CREATE UNIQUE INDEX user_track_single ON user_track(user_id, track_id)",[],function() {});
   db.run("CREATE TABLE IF NOT EXISTS user_track_tag (user_id, track_id, tag)");
 });
 
@@ -77,7 +85,9 @@ app.use(express.static('public'));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
-      const { access_token, user_id} = req.query;
+      const access_token = req.cookies.access_token;
+      const refresh_token = req.cookies.refresh_token;
+      const user_id = req.cookies.user_id;
       if (access_token && user_id) {
         get_playlists(access_token, user_id, function(playlists) {
           res.render('playlists', {
@@ -93,7 +103,10 @@ app.get("/", function (req, res) {
 
 app.get("/playlist/:playlist_id", function (req, res) {
    const playlist_id = req.params.playlist_id;
-   const { access_token, user_id, ss, owner} = req.query;
+   const access_token = req.cookies.access_token;
+   const refresh_token = req.cookies.refresh_token;
+   const user_id = req.cookies.user_id;
+   const { ss, owner} = req.query;
    get_playlist(access_token, user_id, owner, ss, playlist_id, function(tracks) {
      res.render('playlist', {
        access_token : access_token,
@@ -199,6 +212,17 @@ function get_playlist_pages(cb, playlists, next_page, access_token, user_id) {
     });
 }
 
+app.post('/postrating', (req, res) => {
+     const user_id = req.cookies.user_id;
+     var track_id = req.body.track_id;
+     var rating = req.body.rating;
+     if (user_id && track_id && rating) {
+       db.run("REPLACE INTO user_track (user_id, track_id, score) VALUES (?, ?, ?)",[user_id, track_id, rating]);
+     }
+     res.type('text/plain');
+     res.send('Okay');
+});
+
 app.get('/login', (req, res) => {
   const scope = 'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
   res.redirect('https://accounts.spotify.com/authorize?' + 
@@ -240,12 +264,10 @@ app.get('/login_callback', (req, res) => {
         request.get(getUserOptions, (error, response, body) => {
           const { id } = body;
           
-          res.redirect('/?' +
-            queryString.stringify({
-              access_token: access_token,
-              refresh_token: refresh_token,
-              user_id: id
-            }));
+          res.cookie('access_token', access_token);
+          res.cookie('refresh_token', refresh_token);
+          res.cookie('user_id', id);
+          res.redirect('/'); 
         });
       }
     }

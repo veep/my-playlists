@@ -1,4 +1,6 @@
 dependencies:
+  body-parser: 1.18.2
+  cookie-parser: 1.4.3
   express: 4.16.2
   express-handlebars: 3.0.0
   query-string: 5.1.0
@@ -192,6 +194,15 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha512-hIP3EEPs8tB9AT1L+NUqtwOAps4mk2Zob89MWXMHjHWg9milF/j4osnnQLXBCBFBk/tvIG/tUc9mOUJiPBhPXA==
+  /cookie-parser/1.4.3:
+    dependencies:
+      cookie: 0.3.1
+      cookie-signature: 1.0.6
+    dev: false
+    engines:
+      node: '>= 0.8.0'
+    resolution:
+      integrity: sha1-D+MfoZ0AC5X0qt8fU/3CuKIDuqU=
   /cookie-signature/1.0.6:
     dev: false
     resolution:
@@ -1051,6 +1062,8 @@ registry: 'https://registry.npmjs.org/'
 shrinkwrapMinorVersion: 4
 shrinkwrapVersion: 3
 specifiers:
+  body-parser: ^1.18.2
+  cookie-parser: ^1.4.3
   express: ^4.16.2
   express-handlebars: ^3.0.0
   query-string: ^5.0.0
