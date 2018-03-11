@@ -1,0 +1,37 @@
+<h1>Spotify playlists for {{user_id}}</h1>
+
+<h2>
+  Private Playlists
+</h2>
+<ul>
+  {{#each playlists.all_private}}
+  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}&access_token={{../access_token}}&user_id={{../user_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
+  {{/each}}
+</ul>
+
+<h2>
+  Public Playlists
+</h2>
+<ul>
+  {{#each playlists.all_public}}
+  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}&access_token={{../access_token}}&user_id={{../user_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
+  {{/each}}
+</ul>
+
+<h2>
+  Collaborative Playlists
+</h2>
+<ul>
+  {{#each playlists.collaborative}}
+  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}&access_token={{../access_token}}&user_id={{../user_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
+  {{/each}}
+</ul>
+
+<h2>
+  Playlists You Follow
+</h2>
+<ul>
+  {{#each playlists.following}}
+  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}&access_token={{../access_token}}&user_id={{../user_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
+  {{/each}}
+</ul>
