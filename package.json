@@ -1,0 +1,35 @@
+{
+  "//1": "describes your app and its dependencies",
+  "//2": "https://docs.npmjs.com/files/package.json",
+  "//3": "updating this file will download and update your packages",
+
+  "name": "my-playlists",
+  "version": "0.0.1",
+  "description": "Spotify Playlist Manger",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "query-string": "^5.0.0",
+    "request": "^2.81.0",
+    
+    "sqlite3": "^3.1.13",
+    "express": "^4.16.2",
+    "express-handlebars": "^3.0.0"
+  },
+  "engines": {
+    "node": "9.x"
+  },
+  "repository": {
+    "url": "https://glitch.com/edit/#!/welcome-project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "glitch",
+    "express",
+    "handlebars",
+    "spotify"
+  ]
+}

@@ -1,0 +1,56 @@
+<div class="container">
+  <div class="row">
+    <div class="col">
+      
+    <h1> 
+    Playlist Details
+    </h1> 
+   </div>
+
+  </div>
+<div class="row">
+  <div class="col">
+    
+ <table class="table table-striped table-sm">
+   <thead class="thead-dark">
+    <tr>
+      <th scope="col">Rating</th>
+      <th scope="col">Track</th>
+      <th scope="col">Artist</th>
+      <th scope="col">Album</th>
+    </tr>
+   </thead>
+   <tbody>
+    {{#each tracks}}
+    <tr>
+      <td unselectable="on" class="table-info text-nowrap" style="width: 1%;">
+        <span class="track-star" data-rating="1" data-trackid="{{this.id}}">
+            <i class="{{#if this.score}}fas{{^}}far{{/if}} fa-star"></i>
+        </span>
+        <span class="track-star" data-rating="2" data-trackid="{{this.id}}">
+        <i class="{{#compare this.score ">" 1}}fas{{^}}far{{/compare}} fa-star "></i>
+        </span>
+        <span class="track-star" data-rating="3" data-trackid="{{this.id}}">
+        <i class="{{#compare this.score ">" 2}}fas{{^}}far{{/compare}} fa-star "></i>
+          </span>
+        <span class="track-star" data-rating="4" data-trackid="{{this.id}}">
+        <i class="{{#compare this.score ">" 3}}fas{{^}}far{{/compare}} fa-star "></i>
+          </span>
+        <span class="track-star" data-rating="5" data-trackid="{{this.id}}">
+        <i class="{{#compare this.score ">" 4}}fas{{^}}far{{/compare}} fa-star "></i>
+          </span>
+        &nbsp;
+      </td>
+      <td>{{this.name}}</td>
+      <td>{{this.artist}}</td>
+      <td>{{this.album}}</td>
+    </tr>
+    {{/each}}
+   </tbody>
+  </table>
+    
+     </div>
+  </div>
+  
+  
+  </div>
