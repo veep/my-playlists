@@ -5,6 +5,7 @@
     <h1> 
     Playlist Details
     </h1> 
+      <a href="/">Back Up</a>
    </div>
 
   </div>
@@ -15,6 +16,7 @@
    <thead class="thead-dark">
     <tr>
       <th scope="col">Rating</th>
+      <th scope="col"></th>
       <th scope="col">Track</th>
       <th scope="col">Artist</th>
       <th scope="col">Album</th>
@@ -25,21 +27,26 @@
     <tr>
       <td unselectable="on" class="table-info text-nowrap" style="width: 1%;">
         <span class="track-star" data-rating="1" data-trackid="{{this.id}}">
-            <i class="{{#if this.score}}fas{{^}}far{{/if}} fa-star"></i>
+            <i class="{{#if this.score}}fas{{^}}far{{/if}} fa-star">&nbsp;</i>
         </span>
         <span class="track-star" data-rating="2" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 1}}fas{{^}}far{{/compare}} fa-star "></i>
+        <i class="{{#compare this.score ">" 1}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
         </span>
         <span class="track-star" data-rating="3" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 2}}fas{{^}}far{{/compare}} fa-star "></i>
+        <i class="{{#compare this.score ">" 2}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
           </span>
         <span class="track-star" data-rating="4" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 3}}fas{{^}}far{{/compare}} fa-star "></i>
+        <i class="{{#compare this.score ">" 3}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
           </span>
         <span class="track-star" data-rating="5" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 4}}fas{{^}}far{{/compare}} fa-star "></i>
+        <i class="{{#compare this.score ">" 4}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
           </span>
         &nbsp;
+      </td>
+      <td>{{#if this.mp3}}
+        <span class="preview-button"><i class="fas fa-play-circle"></i></span>
+        <audio><source src="{{this.mp3}}" type="audio/mpeg"></audio>
+        {{/if}}
       </td>
       <td>{{this.name}}</td>
       <td>{{this.artist}}</td>

@@ -17,4 +17,25 @@ $( document ).ready(function() {
        });
     }                                           
   }); 
+  $(".preview-button").click(function(e) {
+       e.preventDefault();
+
+       // This next line will get the audio element
+       // that is adjacent to the link that was clicked.
+       var song = $(this).next('audio').get(0);
+       if (song.paused) {
+         $('audio').each(function() {this.pause();});
+         song.play();
+       } else {
+         song.pause();
+       }
+     });
+  $('audio').on('pause play',function(e) {
+    var button = $(this).prev('span').contents();
+    if (e.type == 'play') {
+      button.addClass('fa-pause-circle').removeClass('fa-play-circle');
+    } else if (e.type == 'pause') {
+      button.addClass('fa-play-circle').removeClass('fa-pause-circle');
+    }
+  });
 }); 

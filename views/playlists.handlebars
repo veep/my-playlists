@@ -1,5 +1,13 @@
-<h1>Spotify playlists for {{user_id}}</h1>
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <h1>Spotify playlists for {{user_id}}</h1>
+    </div>
+</div>
 
+ <div class="row">
+    <div class="col">
+   
 <h2>
   Private Playlists
 </h2>
@@ -17,6 +25,7 @@
   <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
   {{/each}}
 </ul>
+   </div>    <div class="col">
 
 <h2>
   Collaborative Playlists
@@ -35,3 +44,6 @@
   <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
   {{/each}}
 </ul>
+   </div>
+</div>
+</div>
