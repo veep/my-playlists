@@ -1,7 +1,3 @@
-// server.js
-// where your node app starts
-
-// init project
 const queryString = require('query-string');
 const request = require('request');
 var express = require('express');
@@ -74,6 +70,7 @@ db.serialize(function() {
   db.run("CREATE TABLE IF NOT EXISTS user_track (user_id, track_id, score)");
   db.run("CREATE UNIQUE INDEX user_track_single ON user_track(user_id, track_id)",[],function() {});
   db.run("CREATE TABLE IF NOT EXISTS user_track_tag (user_id, track_id, tag)");
+  db.run("CREATE UNIQUE INDEX user_track_tag_single ON user_track_tag(user_id, track_id, tag)",[],function() {});
 });
 
 
@@ -89,11 +86,15 @@ app.get("/", function (req, res) {
       const refresh_token = req.cookies.refresh_token;
       const user_id = req.cookies.user_id;
       if (access_token && user_id) {
+        var Pcounts = get_rating_counts(user_id);
         get_playlists(access_token, user_id, function(playlists) {
-          res.render('playlists', {
-            access_token: access_token,
-            user_id : user_id,
-            playlists : playlists
+          Pcounts.then(function(score_rows){
+            res.render('playlists', {
+              access_token: access_token,
+              user_id : user_id,
+              playlists : playlists,
+              score_rows : score_rows
+            });
           });
         }, function() {
           res.cookie('access_token','');
@@ -103,6 +104,19 @@ app.get("/", function (req, res) {
         res.render('home');
       }
 });
+
+function get_rating_counts (user_id) {
+  return new Promise (function (fulfilled, rejected) {
+    db.all("SELECT count(*) AS count,trim(score) AS rating FROM user_track where user_id = ? GROUP BY trim(score) ORDER BY trim(score) DESC",[user_id],function (err, rows) {
+      var results = [];
+      if (err) {
+        fulfilled(results);
+      } else {
+        fulfilled(rows);
+      }
+    });
+  });
+}
 
 app.get("/playlist/:playlist_id", function (req, res) {
    const playlist_id = req.params.playlist_id;

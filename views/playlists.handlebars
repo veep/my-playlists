@@ -3,11 +3,19 @@
     <div class="col">
       <h1>Spotify playlists for {{user_id}}</h1>
     </div>
-</div>
+    <div class="col">
+      <ul>
+        {{#each score_rows}}
+        <li>Tracks with rating {{this.rating}}: {{this.count}}</li>
+        {{/each}}
+      </ul>
+    </div>
+  </div>
 
  <div class="row">
     <div class="col">
    
+    
 <h2>
   Private Playlists
 </h2>
