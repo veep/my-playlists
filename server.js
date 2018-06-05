@@ -95,6 +95,9 @@ app.get("/", function (req, res) {
             user_id : user_id,
             playlists : playlists
           });
+        }, function() {
+          res.cookie('access_token','');
+          res.render('home');
         });
       } else {
         res.render('home');
@@ -144,7 +147,8 @@ function get_track_pages(cb, tracks, next_page, access_token, user_id) {
             id: item.track.id,
             name: item.track.name,
             album: item.track.album.name,
-            artist: item.track.artists.map( x => x.name).join(', ')
+            artist: item.track.artists.map( x => x.name).join(', '),
+            mp3: item.track.preview_url
           }
           );
       });
@@ -171,13 +175,13 @@ function get_track_pages(cb, tracks, next_page, access_token, user_id) {
     });
 }
             
-function get_playlists(access_token, user_id, cb) {
+function get_playlists(access_token, user_id, cb, error_cb) {
     var next_page = 'https://api.spotify.com/v1/me/playlists?limit=50';
     var playlists = {all_private: [], all_public: [], collaborative: [], following: []};
-    get_playlist_pages(cb, playlists, next_page, access_token, user_id);
+    get_playlist_pages(cb, error_cb, playlists, next_page, access_token, user_id);
 }
 
-function get_playlist_pages(cb, playlists, next_page, access_token, user_id) {
+function get_playlist_pages(cb, error_cb, playlists, next_page, access_token, user_id) {
     var getPlaylistOptions = {
       url: next_page,
       headers: { 'Authorization': `Bearer ${access_token}` },
@@ -186,7 +190,7 @@ function get_playlist_pages(cb, playlists, next_page, access_token, user_id) {
     request.get(getPlaylistOptions, (error, response, body) => {
       if(error || response.statusCode != 200) {
         console.log(error, response.statusCode);
-        cb({});
+        error_cb();
         return;
       }
       next_page=body.next;
@@ -205,7 +209,7 @@ function get_playlist_pages(cb, playlists, next_page, access_token, user_id) {
         } 
       });
       if (next_page) {
-        get_playlist_pages(cb, playlists, next_page, access_token, user_id);
+        get_playlist_pages(cb, error_cb, playlists, next_page, access_token, user_id);
       } else {
         cb(playlists);
       }
