@@ -14,6 +14,39 @@
           <li>None yet!</li>
         {{/each}}
       </ul>
+      {{#unless existing_managed.[3plus] }}
+        <p>
+        <form action="/playlist-maker" method="POST" class="actions">
+          <button type="submit" class="btn">
+            Make "3-5 Stars"
+          </button>
+          <input type="hidden" name="rating_min" value="3">
+          <input type="hidden" name="rating_max" value="5">
+        </form>
+        </p>
+      {{/unless}}
+      {{#unless existing_managed.[4plus] }}
+        <p>
+        <form action="/playlist-maker" method="POST" class="actions">
+          <button type="submit" class="btn">
+            Make "4-5 Stars"
+          </button>
+          <input type="hidden" name="rating_min" value="4">
+          <input type="hidden" name="rating_max" value="5">
+        </form>
+        </p>  
+      {{/unless}}
+      {{#unless existing_managed.[5] }}
+        <p>
+        <form action="/playlist-maker" method="POST" class="actions">
+          <button type="submit" class="btn">
+            Make "5 Stars"
+          </button>
+          <input type="hidden" name="rating_min" value="5">
+          <input type="hidden" name="rating_max" value="5">
+        </form>
+        </p>
+      {{/unless}}
       <h4>
         Your Private Playlists
       </h4>

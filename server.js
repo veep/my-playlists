@@ -4,31 +4,21 @@ app.use(express.static('public'));
 
 // Handlebars setup
 const exphbs  = require('express-handlebars');
+const util = require('./util.js');
+
 const hbs = exphbs.create({
   defaultLayout: 'main',
-  helpers: get_handlebars_helpers()
+  helpers: util.get_handlebars_helpers()
 });
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 // end Handelbars setup
 
-// Session setup
-const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
-app.use(session({
-  store: new SQLiteStore({dir: '.data'}),
-  resave: false,
-  saveUninitialized: false,
-  rolling: true,
-  cookie: { maxAge: 1000*60*60*24*30 },
-  secret: process.env.SECRET
-}));
-// end Session setup
+require('./session.js')(app);
 
 // HTTP handling setup
 const queryString = require('query-string');
 const request = require('request-promise-native');
-const btoa = require('btoa');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -36,25 +26,56 @@ app.use(bodyParser.urlencoded({
 }));
 // end HTTP handling setup
 
-// DB handling setup
-const sqlite = require('sqlite');
-const dbPromise = Promise.resolve()
-    .then(() => sqlite.open('.data/tracks.db', { cached: true, verbose: true }))
-    .then(db => db.migrate({migrationsPath: "./schema"}));
-// end DB handling setup
+// Convenience functions setup
+/* global Set */  // Make the linter happy
+const equal = require('deep-equal');
+
+Promise.prototype.thenWait = function thenWait(time) {
+    return this.then(result => new Promise(resolve => setTimeout(resolve, time, result)));
+};
+
+
+// end Convenience functions setup
+
+const dbPromise = require('./db.js');
+const spotify_http = require('./spotify.js');
+const mod_playlists = require('./playlists.js');
+const mod_tracks = require('./tracks.js');
 
 // Endpoints
 app.get("/", function (req, res) {
   if (req.session.user_id && req.session.access_token) {
     Promise.all( [ 
-      get_playlists(req).then( playlists => find_managed(playlists) ),
-      get_rating_counts(req.session.user_id) 
+      mod_playlists.get_playlists(req),
+      mod_tracks.get_rating_counts(req.session.user_id) 
     ] )
       .then(function( [ playlists, score_rows ] ) {
-        res.render('playlists', {
-          user_id: req.session.user_id,
-          playlists: playlists,
-          score_rows: score_rows
+        let existing_managed = {'2': 0, '3': 0, '4': 0, '5': 0, '2plus': 0, '3plus' : 0, '4plus' : 0};
+        Promise.all(
+          [
+            check_for_rating_range( playlists, 5, 5),
+            check_for_rating_range( playlists, 4, 5),
+            check_for_rating_range( playlists, 3, 5)
+          ]
+        )
+        .then(function([has5, has45, has35]) {
+          if (has5) {
+            existing_managed[5] = 1;
+          }
+          if(has45) {
+            existing_managed['4plus'] = 1;
+          }
+          if(has35) {
+            existing_managed['3plus'] = 1;
+          }
+        })
+        .then(function() {
+          res.render('playlists', {
+            user_id: req.session.user_id,
+            playlists: playlists,
+            score_rows: score_rows,
+            existing_managed: existing_managed
+          });
         });
     });
   } else {
@@ -62,138 +83,23 @@ app.get("/", function (req, res) {
   }
 });
 
-function get_rating_counts (user_id) {
-  return dbPromise
-    .then(db => 
-          db.all("SELECT count(*) AS count,trim(score) AS rating FROM user_track where user_id = ? GROUP BY trim(score) ORDER BY trim(score) DESC",[user_id])
-    );
-}
-
-function get_playlists (req) {
-  let next_page = 'https://api.spotify.com/v1/me/playlists?limit=50';
-  let playlists = {all_private: [], all_public: [], collaborative: [], following: [], managed: []};
-  return get_playlist_pages(req, playlists, next_page);
-}
-
-function get_playlist_pages (req, playlists, next_page) {
-  return do_spotify_get(req, next_page)
-    .then(function (body) {
-      next_page=body.next;
-      //console.log(next_page);
-      body.items.map((item, index) => {
-        if (item.collaborative) {
-          playlists.collaborative.push(item);
-        } else if (item.owner.id === req.session.user_id) {
-          if (item['public']) {
-            playlists.all_public.push(item);
-          } else {
-            playlists.all_private.push(item);
-          }
-        } else {
-          playlists.following.push(item);
-        } 
-      });
-     if (next_page) {
-       return get_playlist_pages(req, playlists, next_page);
-     } else {
-       return playlists;
-     }
-  });
-}
-
-function find_managed(playlists) {
-  let checked_promises = [];
-  let managed_playlists = {};
-  for (let sublist of ['all_private', 'all_public']) {
-    if (playlists[sublist]) {
-      playlists[sublist].forEach(function(playlist) {
-        const playlist_updated = dbPromise
-        .then(db => db.get('SELECT managed from playlist where playlist_id = ? ',playlist.id))
-        .then(row => {
-          if (row && row.managed == 1) {
-            managed_playlists[playlist.id] = 1;
-          }
-          Promise.resolve();
-        });
-        checked_promises.push(playlist_updated);
-      });
-    }
-  }
-  return Promise.all(checked_promises).then( function () {
-    for (let sublist of ['all_private', 'all_public']) {
-      if (playlists[sublist]) {
-        const playlists_to_process = playlists[sublist];
-        playlists[sublist] = [];
-        playlists_to_process.forEach(function(playlist) {
-          if (managed_playlists[playlist.id]) {
-            playlists.managed.push(playlist);
-          } else {
-            playlists[sublist].push(playlist);
-          }
-        });
-      }
-    }
-    return playlists;
+function check_for_rating_range(playlists, lower, upper) {
+  const desired = { AND: [ {rating_min: lower}, {rating_max: upper} ]};
+  console.log(desired,playlists.managed.length);
+  return playlists.managed.find(function(pl) {
+    return (equal(JSON.parse(pl.ruleset),desired));
   });
 }
   
-function do_spotify_get (req, url, retrying=false) {
-  let access = req.session.access_token;
-  const options = {
-    url: url,
-    headers: { 'Authorization': `Bearer ${access}` },
-    json: true
-  };
-  return request(options)
-  .catch(function(err) {
-    console.warn(err.statusCode);
-    if(err.statusCode != 401 || retrying) {
-      return Promise.reject(err);
-    } else {
-      // get new access_token
-      return dbPromise
-        .then(db => db.get('SELECT refresh_token FROM user_refresh_token WHERE user_id = ?',req.session.user_id))
-        .then(row => {
-          if (! row) {
-            return Promise.reject();
-          } else {
-            console.log('refreshing for ',req.session.user_id);
-            const refresh_options = {
-              method: 'POST',
-              uri: 'https://accounts.spotify.com/api/token',
-              form: {
-                grant_type: 'refresh_token',
-                refresh_token: row.refresh_token
-              },
-              headers: {
-                'Authorization' : 'Basic ' + btoa(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET)
-                
-              },
-              json: true
-            };
-            return request(refresh_options)
-            .then(function(body) { 
-                    if (body.access_token) {
-                      console.log('got new access token ', body.access_token.substr(0,10) + '...');
-                      req.session.access_token = body.access_token;
-                      return do_spotify_get(req, url, true);
-                    } 
-                    return Promise.reject('bad access token');
-            });
-          }
-      });
-    }
-  });
-}
-         
-    
-   
+              
+
+
     
 app.get("/playlist/:playlist_id", function (req, res) {
   const playlist_id = req.params.playlist_id;
   const {ss, owner} = req.query;
   if (req.session.user_id && req.session.access_token) {
-    get_playlist(req, playlist_id, ss, owner).then(function(tracks) {
+    mod_playlists.get_playlist_tracks(req, playlist_id, ss, owner).then(function(tracks) {
       res.render('playlist', {
         playlist_id : playlist_id,
         tracks: tracks
@@ -205,52 +111,41 @@ app.get("/playlist/:playlist_id", function (req, res) {
 });
   
 
-function get_playlist(req, playlist_id, snapshot, owner) {
-  let next_page = 'https://api.spotify.com/v1/users/' + owner + '/playlists/' + playlist_id + '/tracks?limit=100';
-  let tracks = [];
-  return get_track_pages(req, next_page, tracks);
-}
-
-function get_track_pages(req, next_page, tracks) {
-  return do_spotify_get(req, next_page)
-    .then(function (body) {  
-      next_page=body.next;
-      //console.log(next_page);
-      body.items.forEach(function(item) {
-        tracks.push(
-          {
-            id: item.track.id,
-            name: item.track.name,
-            album: item.track.album.name,
-            artist: item.track.artists.map( x => x.name).join(', '),
-            mp3: item.track.preview_url
-          }
-        );
-      });
-      if (tracks.length == 0) {
-        return (tracks);
+         
+app.post('/playlist-maker', (req, res) => {
+  const user_id = req.session.user_id;
+  const rating_min = req.body.rating_min;
+  const rating_max = req.body.rating_max;
+  if (rating_min >=1 && rating_min <= rating_max && rating_max <= 5) {
+    // check for redundant playlist
+    console.log('making Spotify playlist', rating_min, rating_max);
+    spotify_http.do_spotify_post(
+      req
+      , 'https://api.spotify.com/v1/users/' + user_id + '/playlists'
+      , {
+        name: 'Auto: ' + (rating_min == rating_max ? rating_min : ''+rating_min +'-'+rating_max) + ' stars'
+        , public: 'false'
       }
-      const track_ids = tracks.map( item => item.id);
-      const sql = 'SELECT track_id, score FROM user_track where user_id = ? AND track_id IN (' + tracks.map( item => '?').join(',') +')';
-      return dbPromise
-        .then(db => db.all(sql, [req.session.user_id].concat(track_ids)))
-        .then(function(rows) {
-          rows.forEach(function(row) {
-            tracks.forEach(function(track) {
-              if (track.id === row.track_id) {
-                track.score = row.score;
-              }
-            });
-          });
-          if (next_page) {
-            return get_track_pages(req, next_page, tracks);
-          } else {
-            return tracks;
-          }
-      });
-  });
-}
-          
+    ).then (body => {
+      const name = body.name;
+      const id = body.id;
+      const owner_id = body.owner.id;
+      const last_snapshot_id = body.snapshot_id;
+      dbPromise.then(
+        db => db.run(
+          "INSERT INTO playlist (playlist_id, name, last_snapshot_id, owner_id, collaborative, ruleset) VALUES (?,?,?,?,0,?)"
+          , [ id, name, last_snapshot_id, owner_id, JSON.stringify( { AND: [ { rating_min: rating_min}, {rating_max: rating_max}] } ) ]
+        ).then(function () {
+          // load tracks in 
+          res.redirect('/');
+        })
+      )
+    });
+  } else {
+    res.redirect('/');
+  }
+});
+         
 app.post('/postrating', (req, res) => {
   const user_id = req.session.user_id;
   const track_id = req.body.track_id;
@@ -266,7 +161,7 @@ app.post('/postrating', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const scope = 'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
+  const scope = 'playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private user-library-read';
   res.redirect('https://accounts.spotify.com/authorize?' + 
     queryString.stringify({
       response_type: 'code',
@@ -315,49 +210,6 @@ app.get('/login_callback', (req, res) => {
     }
   );
 });
-
-function get_handlebars_helpers() {
-  return {
-    encode_uri_component: function(foo) {return encodeURIComponent(foo);},
-        compare: function (lvalue, operator, rvalue, options) {
-
-      if (arguments.length < 3) {
-          throw new Error("Handlerbars Helper 'compare' needs 2 parameters");
-      }
-
-      if (options === undefined) {
-          options = rvalue;
-          rvalue = operator;
-          operator = "===";
-      }
-
-      let operators = {
-          '==': function (l, r) { return l == r; },
-          '===': function (l, r) { return l === r; },
-          '!=': function (l, r) { return l != r; },
-          '!==': function (l, r) { return l !== r; },
-          '<': function (l, r) { return l < r; },
-          '>': function (l, r) { return l > r; },
-          '<=': function (l, r) { return l <= r; },
-          '>=': function (l, r) { return l >= r; },
-          'typeof': function (l, r) { return typeof l == r; }
-      };
-
-      if (!operators[operator]) {
-          throw new Error("Handlerbars Helper 'compare' doesn't know the operator " + operator);
-      }
-
-      let result = operators[operator](lvalue, rvalue);
-
-      if (result) {
-          return options.fn(this);
-      } else {
-          return options.inverse(this);
-      }
-
-    }
-  }
-}
 
 // listen for requests 
 var listener = app.listen(process.env.PORT, function () {

@@ -2,9 +2,11 @@ dependencies:
   body-parser: 1.18.2
   btoa: 1.2.1
   connect-sqlite3: 0.9.10
+  deep-equal: 1.0.1
   express: 4.16.3
   express-handlebars: 3.0.0
   express-session: 1.15.6
+  lodash: 4.17.5
   query-string: 6.0.0
   request: 2.85.0
   request-promise-native: 1.0.5
@@ -264,6 +266,10 @@ packages:
       node: '>=0.10'
     resolution:
       integrity: sha1-6zkTMzRYd1y4TNGh+uBiEGu4dUU=
+  /deep-equal/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha1-9dJgKStmDghO/0zbyfCK0yR0SLU=
   /define-properties/1.1.2:
     dependencies:
       foreach: 2.0.5
@@ -983,6 +989,7 @@ packages:
     dependencies:
       nan: 2.7.0
     dev: false
+    requiresBuild: true
     resolution:
       integrity: sha512-JxXKPJnkZ6NuHRojq+g2WXWBt3M1G9sjZaYiHEWSTGijDM3cwju/0T2XbWqMXFmPqDgw+iB7zKQvnns4bvzXlw==
   /sshpk/1.14.1:
@@ -1149,15 +1156,17 @@ packages:
     resolution:
       integrity: sha1-9+572FfdfB0tOMDnTvvWgdFDH9E=
 registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 4
+shrinkwrapMinorVersion: 7
 shrinkwrapVersion: 3
 specifiers:
   body-parser: ^1.18.2
   btoa: ^1.2.1
   connect-sqlite3: ^0.9.10
+  deep-equal: ^1.0.1
   express: ^4.16.3
   express-handlebars: ^3.0.0
   express-session: ^1.15.6
+  lodash: ^4.17.5
   query-string: ^6.0.0
   request: ^2.85.0
   request-promise-native: ^1.0.5

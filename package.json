@@ -19,13 +19,15 @@
     "sqlite": "^2.9.1",
     "request-promise-native": "^1.0.5",
     "btoa": "^1.2.1",
-    "body-parser": "^1.18.2"
+    "body-parser": "^1.18.2",
+    "deep-equal": "^1.0.1",
+    "lodash": "^4.17.5"
   },
   "engines": {
     "node": "8.x"
   },
   "repository": {
-    "url": "https://glitch.com/edit/#!/welcome-project"
+    "url": "https://github.com/veep/my-playlists"
   },
   "license": "MIT",
   "keywords": [
