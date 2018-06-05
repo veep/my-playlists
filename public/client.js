@@ -10,9 +10,9 @@ $( document ).ready(function() {
        });
        $(this).parent().children(".track-star").each(function() {
          if ($(this).data('rating') <= rating) {
-           $(this).children(".fa-star").addClass("fas").removeClass("far");
+           $(this).children("i").text("star");
          } else {
-           $(this).children(".fa-star").addClass("far").removeClass("fas");
+           $(this).children("i").text("star_border");
          }  
        });
     }                                           

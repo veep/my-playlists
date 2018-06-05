@@ -1,56 +1,58 @@
 <div class="container">
+  <h1> 
+    Playlist Details
+  </h1> 
+    <a href="/">Back To Playlists</a>
   <div class="row">
     <div class="col">
-      
-    <h1> 
-    Playlist Details
-    </h1> 
-      <a href="/">Back Up</a>
-   </div>
+      <table class=" striped">
+        <thead>
+          <tr>
+            <th scope="col">Rating</th>
+            <th scope="col"></th>
+            <th scope="col" class="hide-on-small-only">Track</th>
+            <th scope="col" class="hide-on-small-only">Artist</th>
+            <th scope="col" class="hide-on-small-only">Album</th>
+            <th scope="col" class="hide-on-med-and-up">Track Info</th>
 
-  </div>
-<div class="row">
-  <div class="col">
-    
- <table class="table table-striped table-sm">
-   <thead class="thead-dark">
-    <tr>
-      <th scope="col">Rating</th>
-      <th scope="col"></th>
-      <th scope="col">Track</th>
-      <th scope="col">Artist</th>
-      <th scope="col">Album</th>
-    </tr>
-   </thead>
+          </tr>
+        </thead>
    <tbody>
     {{#each tracks}}
     <tr>
-      <td unselectable="on" class="table-info text-nowrap" style="width: 1%;">
+      <td class="star-column hoverable">
         <span class="track-star" data-rating="1" data-trackid="{{this.id}}">
-            <i class="{{#if this.score}}fas{{^}}far{{/if}} fa-star">&nbsp;</i>
+          <i class="material-icons md-18">{{#if this.score}}star{{^}}star_border{{/if}}</i>
         </span>
         <span class="track-star" data-rating="2" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 1}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
+          <i class="material-icons md-18">{{#compare this.score ">" 1}}star{{^}}star_border{{/compare}}</i>
         </span>
         <span class="track-star" data-rating="3" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 2}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
-          </span>
+          <i class="material-icons md-18">{{#compare this.score ">" 2}}star{{^}}star_border{{/compare}}</i>
+        </span>
         <span class="track-star" data-rating="4" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 3}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
-          </span>
+          <i class="material-icons md-18">{{#compare this.score ">" 3}}star{{^}}star_border{{/compare}}</i>
+        </span>
         <span class="track-star" data-rating="5" data-trackid="{{this.id}}">
-        <i class="{{#compare this.score ">" 4}}fas{{^}}far{{/compare}} fa-star ">&nbsp;</i>
-          </span>
+          <i class="material-icons md-18">{{#compare this.score ">" 4}}star{{^}}star_border{{/compare}}</i>
+        </span>
         &nbsp;
       </td>
       <td>{{#if this.mp3}}
         <span class="preview-button"><i class="fas fa-play-circle"></i></span>
-        <audio><source src="{{this.mp3}}" type="audio/mpeg"></audio>
+        <audio preload="none"><source src="{{this.mp3}}" type="audio/mpeg"></audio>
         {{/if}}
       </td>
-      <td>{{this.name}}</td>
-      <td>{{this.artist}}</td>
-      <td>{{this.album}}</td>
+      <td class="hide-on-small-only">{{this.name}}</td>
+      <td class="hide-on-small-only">{{this.artist}}</td>
+      <td class="hide-on-small-only">{{this.album}}</td>
+      <td class="hide-on-med-and-up">
+        <b>{{this.name}}</b>
+        <br/>
+        {{this.artist}}
+        <br/>
+        {{this.album}}
+      </td>
     </tr>
     {{/each}}
    </tbody>

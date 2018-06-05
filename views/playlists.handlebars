@@ -1,57 +1,63 @@
 <div class="container">
+  <h2>Spotify playlists for {{user_id}}</h2>
   <div class="row">
-    <div class="col">
-      <h1>Spotify playlists for {{user_id}}</h1>
-    </div>
-    <div class="col">
+    <div class="col s12 m6">
+      <h4>
+        Your "My Playlists" Playlists
+      </h4>
       <ul>
-        {{#each score_rows}}
-        <li>Tracks with rating {{this.rating}}: {{this.count}}</li>
+        {{#each playlists.managed}}
+        <li>
+          <a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)
+        </li>
+        {{else}}
+          <li>None yet!</li>
+        {{/each}}
+      </ul>
+      <h4>
+        Your Private Playlists
+      </h4>
+      <ul>
+        {{#each playlists.all_private}}
+        <li>
+          <a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)
+        </li>
+        {{/each}}
+      </ul>
+
+      <h4>
+        Your Public Playlists
+      </h4>
+      <ul>
+        {{#each playlists.all_public}}
+        <li>
+          <a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)
+        </li>
+        {{/each}}
+      </ul>
+    </div>
+    <div class="col s12 m6">
+      <h4>
+        Collaborative Playlists
+      </h4>
+      <ul>
+        {{#each playlists.collaborative}}
+        <li>
+          <a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)
+        </li>
+        {{/each}}
+      </ul>
+
+      <h4>
+        Playlists You Follow
+      </h4>
+      <ul>
+        {{#each playlists.following}}
+        <li>
+          <a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)
+        </li>
         {{/each}}
       </ul>
     </div>
   </div>
-
- <div class="row">
-    <div class="col">
-   
-    
-<h2>
-  Private Playlists
-</h2>
-<ul>
-  {{#each playlists.all_private}}
-  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
-  {{/each}}
-</ul>
-
-<h2>
-  Public Playlists
-</h2>
-<ul>
-  {{#each playlists.all_public}}
-  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
-  {{/each}}
-</ul>
-   </div>    <div class="col">
-
-<h2>
-  Collaborative Playlists
-</h2>
-<ul>
-  {{#each playlists.collaborative}}
-  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
-  {{/each}}
-</ul>
-
-<h2>
-  Playlists You Follow
-</h2>
-<ul>
-  {{#each playlists.following}}
-  <li><a href="/playlist/{{this.id}}?owner={{encode_uri_component this.owner.id}}&ss={{encode_uri_component this.snapshot_id}}">{{this.name}}</a> ({{this.tracks.total}} tracks)</li>
-  {{/each}}
-</ul>
-   </div>
-</div>
 </div>
